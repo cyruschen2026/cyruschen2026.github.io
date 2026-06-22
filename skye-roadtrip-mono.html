@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>天空岛之路 · ROADBOOK</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --bg:#0b0b0c;          /* 近黑底色 · 夜间仪表盘 */
+    --bg-2:#141416;        /* 面板 / 卡片 */
+    --bg-3:#1b1b1e;        /* 抬升层 */
+    --fg:#f2f2f0;          /* 近白主字 */
+    --fg-2:#a6a6a4;        /* 灰 · 次要 */
+    --fg-3:#6c6c6e;        /* 暗灰 · 标签 */
+    --line:#262629;        /* 发丝线 */
+    --line-2:#3a3a3e;
+    --white:#ffffff;       /* 唯一「高光」: 纯白 */
+    --display:'Space Grotesk','Noto Sans SC',sans-serif;
+    --mono:'Space Mono','SFMono-Regular',ui-monospace,monospace;
+    --body:'Inter','Noto Sans SC',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--fg);font-family:var(--body);-webkit-font-smoothing:antialiased}
+  body{display:flex;flex-direction:column;min-height:100vh}
+
+  /* ---------- 顶部:仪表读数 ---------- */
+  .hd{padding:30px clamp(20px,5vw,56px) 0;position:relative}
+  .eyebrow{
+    font-family:var(--mono);font-size:11px;letter-spacing:.42em;
+    color:var(--fg-3);text-transform:uppercase;margin-bottom:16px;
+  }
+  .hd h1{
+    font-family:var(--display);font-weight:700;letter-spacing:-.02em;
+    font-size:clamp(36px,7vw,68px);line-height:.92;color:var(--white);
+  }
+  .sub{
+    font-family:var(--mono);font-size:clamp(12px,1.8vw,14px);letter-spacing:.24em;
+    color:var(--fg-2);margin-top:12px;text-transform:uppercase;
+  }
+  .readout{
+    display:flex;margin-top:26px;border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .ro{flex:1;padding:16px 0 17px;position:relative}
+  .ro+.ro{border-left:1px solid var(--line);padding-left:clamp(16px,3vw,30px)}
+  .ro-l{
+    display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.28em;
+    color:var(--fg-3);text-transform:uppercase;margin-bottom:8px;
+  }
+  .ro-v{
+    font-family:var(--mono);font-weight:700;color:var(--white);
+    font-size:clamp(26px,4.4vw,40px);line-height:1;letter-spacing:-.01em;
+  }
+  .ro-v small{font-size:.5em;color:var(--fg-2);font-weight:400;margin-left:3px;letter-spacing:0}
+
+  /* ---------- 主区域 ---------- */
+  .layout{flex:1;display:flex;min-height:0;padding:clamp(16px,3vw,28px) clamp(20px,5vw,56px) clamp(16px,3vw,28px)}
+  .map-frame{flex:1;min-height:0;border:1px solid var(--line-2);position:relative;overflow:hidden}
+  #map{position:absolute;inset:0;background:var(--bg)}
+  /* 地图四角的取景框装饰 */
+  .map-frame::before,.map-frame::after{
+    content:"";position:absolute;width:14px;height:14px;z-index:500;pointer-events:none;
+    border-color:var(--white);border-style:solid;border-width:0;
+  }
+  .map-frame::before{top:9px;left:9px;border-top-width:1.5px;border-left-width:1.5px}
+  .map-frame::after{bottom:9px;right:9px;border-bottom-width:1.5px;border-right-width:1.5px}
+
+  .panel{
+    width:368px;flex-shrink:0;margin-left:clamp(16px,3vw,28px);
+    display:flex;flex-direction:column;min-height:0;
+    border:1px solid var(--line);background:var(--bg-2);
+  }
+  .panel-hd{
+    font-family:var(--mono);font-size:11px;letter-spacing:.3em;color:var(--fg-2);
+    text-transform:uppercase;padding:18px 24px 16px;border-bottom:1px solid var(--line);
+  }
+  .rb{position:relative;overflow-y:auto;flex:1;padding:8px 0}
+  .rb::-webkit-scrollbar{width:8px}
+  .rb::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:8px}
+  /* 行程主轴 */
+  .rb::before{content:"";position:absolute;left:39px;top:30px;bottom:30px;width:1px;background:var(--line-2)}
+
+  .rb-row{display:grid;grid-template-columns:58px 1fr;align-items:center}
+
+  /* —— 停留点 —— */
+  .rb-stop{padding:9px 24px 9px 0;cursor:pointer}
+  .rb-stop .rail{display:flex;justify-content:center}
+  .badge{
+    width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+    font-family:var(--mono);font-weight:700;font-size:13px;
+    background:var(--bg);color:var(--fg);border:1.5px solid var(--line-2);
+    transition:all .16s;z-index:1;
+  }
+  .rb-stop:hover .badge{border-color:var(--fg);color:var(--white)}
+  .rb-stop.active .badge{background:var(--white);color:var(--bg);border-color:var(--white)}
+  .s-body{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-width:0}
+  .s-name{font-family:var(--display);font-weight:600;font-size:16.5px;color:var(--fg);line-height:1.2}
+  .rb-stop.active .s-name,.rb-stop:hover .s-name{color:var(--white)}
+  .s-en{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--fg-3);margin-top:3px}
+  .s-time{font-family:var(--mono);font-size:14px;color:var(--fg-2);flex-shrink:0}
+  .rb-stop.active .s-time{color:var(--white)}
+
+  /* —— 驾驶腿(重点)—— */
+  .rb-leg{padding:2px 24px 2px 0}
+  .rb-leg .rail{display:flex;justify-content:center;color:var(--fg-3);font-size:12px;line-height:1}
+  .leg-body{
+    border-left:2px solid var(--line-2);padding:7px 0 7px 14px;margin-left:-1px;
+    transition:border-color .16s;
+  }
+  .rb-leg:hover .leg-body{border-left-color:var(--white)}
+  .leg-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.26em;color:var(--fg-3);text-transform:uppercase}
+  .leg-val{
+    font-family:var(--mono);font-weight:700;font-size:18px;color:var(--fg);
+    margin-top:4px;letter-spacing:-.01em;transition:color .16s;
+  }
+  .rb-leg:hover .leg-val{color:var(--white)}
+  .leg-val .dot{color:var(--fg-3);font-weight:400;padding:0 7px}
+  .leg-val .u{font-size:.7em;color:var(--fg-2);font-weight:400;margin-left:2px}
+
+  /* ---------- 地图:图钉 ---------- */
+  .pin-wrap{background:none;border:none}
+  .pin{
+    width:30px;height:30px;border-radius:50%;background:var(--white);
+    display:grid;place-items:center;box-shadow:0 2px 10px rgba(0,0,0,.6);
+    border:2px solid var(--bg);transition:transform .18s;
+  }
+  .pin span{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--bg);line-height:1}
+  .leaflet-marker-icon:hover .pin{transform:scale(1.18)}
+  .pin-drop{opacity:0;transform:scale(.3) translateY(-12px);
+    transition:transform .45s cubic-bezier(.34,1.4,.5,1),opacity .3s}
+  .pin-drop.in{opacity:1;transform:scale(1) translateY(0)}
+
+  /* 路线上的「行车时间」标签 */
+  .leg-label{background:none;border:none}
+  .leg-label .lab{
+    display:inline-block;font-family:var(--mono);font-weight:700;font-size:11px;
+    color:var(--fg-2);background:rgba(11,11,12,.82);border:1px solid var(--line-2);
+    padding:2px 7px;border-radius:2px;white-space:nowrap;letter-spacing:.02em;
+    backdrop-filter:blur(2px);transition:all .16s;opacity:0;transform:scale(.8);
+  }
+  .leg-label.show .lab{opacity:1;transform:scale(1)}
+  .leg-label.hot .lab{color:var(--bg);background:var(--white);border-color:var(--white)}
+
+  /* ---------- 弹窗 ---------- */
+  .leaflet-popup-content-wrapper{
+    background:var(--bg-2);border:1px solid var(--line-2);border-radius:4px;
+    padding:0;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,.7);
+  }
+  .leaflet-popup-content{margin:0;width:262px!important;line-height:1.4}
+  .leaflet-popup-tip{background:var(--bg-2);border:1px solid var(--line-2)}
+  .leaflet-popup-close-button{
+    color:var(--fg-2)!important;right:8px!important;top:8px!important;
+    width:22px!important;height:22px!important;font-size:17px!important;line-height:20px!important;
+    background:rgba(0,0,0,.45);border-radius:50%;font-weight:400!important;
+  }
+  .leaflet-popup-close-button:hover{color:var(--white)!important;background:#000}
+
+  .pm{position:relative;background:var(--bg-3)}
+  .pm img,.pm video{display:block;width:100%;height:160px;object-fit:cover;filter:grayscale(1) contrast(1.05)}
+  .pm .embed{position:relative;width:100%;padding-top:56.25%}
+  .pm .embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .pm .ph{
+    height:120px;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;
+    color:var(--fg-3);border-bottom:1px solid var(--line);
+    background:repeating-linear-gradient(-45deg,transparent,transparent 9px,rgba(255,255,255,.02) 9px,rgba(255,255,255,.02) 18px);
+  }
+  .pm .ph svg{width:24px;height:24px;opacity:.5}
+  .pm .ph span{font-family:var(--mono);font-size:10px;letter-spacing:.04em}
+
+  .pb{padding:15px 17px 16px}
+  .pb-num{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--fg-3)}
+  .pb h3{font-family:var(--display);font-weight:600;font-size:20px;color:var(--white);margin-top:5px;line-height:1.1}
+  .pb .en{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--fg-3);margin-top:4px}
+  .pb-meta{
+    display:flex;gap:0;margin-top:13px;padding-top:12px;border-top:1px solid var(--line);
+    font-family:var(--mono);
+  }
+  .pb-meta>div{flex:1}
+  .pb-meta>div+div{border-left:1px solid var(--line);padding-left:12px}
+  .pb-meta .k{font-size:9px;letter-spacing:.18em;color:var(--fg-3);text-transform:uppercase}
+  .pb-meta .v{font-size:14px;font-weight:700;color:var(--fg);margin-top:4px}
+  .pb p{font-size:13px;color:var(--fg-2);margin-top:13px;line-height:1.6;font-family:var(--body)}
+  .pb .coord{font-family:var(--mono);font-size:10px;color:var(--fg-3);margin-top:12px;letter-spacing:.04em}
+
+  /* ---------- 页脚 ---------- */
+  footer{
+    padding:13px clamp(20px,5vw,56px);font-family:var(--mono);font-size:10.5px;
+    letter-spacing:.04em;color:var(--fg-3);border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;text-transform:uppercase;
+  }
+  footer a{color:var(--fg-2);text-decoration:none}
+  footer a:hover{color:var(--white)}
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width:780px){
+    .layout{flex-direction:column;padding:16px 16px}
+    .map-frame{height:54vh;min-height:330px;flex:none}
+    .panel{width:100%;flex:none;margin-left:0;margin-top:16px}
+    .rb{overflow:visible}
+    body{min-height:auto}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .pin-drop{transition:none!important;opacity:1!important;transform:none!important}
+    .leg-label .lab{transition:none!important;opacity:1!important;transform:none!important}
+  }
+</style>
+</head>
+<body>
+
+  <header class="hd">
+    <div class="eyebrow">Roadbook · 自驾日志</div>
+    <h1>天空岛之路</h1>
+    <div class="sub">Glasgow → Isle of Skye</div>
+    <div class="readout">
+      <div class="ro"><span class="ro-l">总行车 Drive</span><span class="ro-v" id="tDur">—</span></div>
+      <div class="ro"><span class="ro-l">总里程 Distance</span><span class="ro-v" id="tKm">—</span></div>
+      <div class="ro"><span class="ro-l">停留点 Stops</span><span class="ro-v" id="tStops">—</span></div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <div class="map-frame"><div id="map"></div></div>
+    <aside class="panel">
+      <div class="panel-hd">行程分段 · Legs</div>
+      <div class="rb" id="rb"></div>
+    </aside>
+  </main>
+
+  <footer>
+    <span>For close friends · 一段属于我们的高地记忆</span>
+    <span>© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a></span>
+  </footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+/* ============================================================
+   ↓↓↓  你只需要改这一块  ↓↓↓
+   每个停留点:
+     coords:[纬度,经度]  ← Google 地图右键任意点即可复制
+     time   到达时间
+     note   一句话备注
+     media  照片/视频(可放多个),留空显示占位:
+            {type:'image', src:'链接'} / {type:'video', src:'.mp4'} / {type:'embed', src:'YouTube或B站embed链接'}
+     drive  ★从上一个点开过来的「这段路」:{min:分钟, km:公里}  ← 第一个点没有
+     path   这段路的轨迹坐标(让线贴着公路,多塞几个点就更顺)。起点=上一个点,终点=本点
+   ============================================================ */
+const STOPS = [
+  {
+    name:"格拉斯哥", en:"GLASGOW", coords:[55.8642,-4.2518], time:"09:00",
+    note:"清晨从西区出发，加满油，一路向北驶进高地。", media:[]
+  },
+  {
+    name:"罗蒙湖 · 卢斯", en:"LOCH LOMOND", coords:[56.1006,-4.6361], time:"10:30",
+    note:"国家公园的门户，湖边的石头小村，喝杯咖啡再上路。",
+    drive:{min:45, km:45},
+    path:[[55.8642,-4.2518],[55.9230,-4.4400],[56.0050,-4.5900],[56.1006,-4.6361]],
+    media:[{type:'image', src:'https://picsum.photos/seed/lochlomond/640/420'}]
+  },
+  {
+    name:"格伦科峡谷", en:"GLEN COE", coords:[56.6774,-5.0086], time:"12:15",
+    note:"高地最震撼的峡谷，群山压顶，云影在谷底流动。",
+    drive:{min:80, km:78},
+    path:[[56.1006,-4.6361],[56.2050,-4.7160],[56.3920,-4.6180],[56.4339,-4.7128],[56.5100,-4.7670],[56.6100,-4.8200],[56.6774,-5.0086]],
+    media:[{type:'image', src:'https://picsum.photos/seed/glencoe/640/420'}]
+  },
+  {
+    name:"威廉堡", en:"FORT WILLIAM", coords:[56.8198,-5.1052], time:"13:30",
+    note:"英国最高峰本尼维斯山脚下的小镇，在这儿吃午饭、补给。",
+    drive:{min:30, km:30},
+    path:[[56.6774,-5.0086],[56.6890,-5.1010],[56.7060,-5.1100],[56.8198,-5.1052]],
+    media:[]
+  },
+  {
+    name:"多南城堡", en:"EILEAN DONAN", coords:[57.2741,-5.5163], time:"15:30",
+    note:"立在湖中小岛上的城堡，明信片上的高地地标。",
+    drive:{min:105, km:120},
+    path:[[56.8198,-5.1052],[56.9000,-4.9300],[57.0260,-4.7830],[57.1000,-5.0500],[57.1500,-5.2500],[57.2070,-5.4290],[57.2400,-5.5100],[57.2741,-5.5163]],
+    media:[{type:'image', src:'https://picsum.photos/seed/eileandonan/640/420'}]
+  },
+  {
+    name:"天空岛大桥", en:"SKYE BRIDGE", coords:[57.2750,-5.7297], time:"16:15",
+    note:"一座弧形大桥跨海登岛，正式踏上天空岛。",
+    drive:{min:20, km:20},
+    path:[[57.2741,-5.5163],[57.2806,-5.7138],[57.2750,-5.7297]],
+    media:[]
+  },
+  {
+    name:"波特里", en:"PORTREE", coords:[57.4125,-6.1942], time:"17:15",
+    note:"天空岛的彩色港口小镇，今晚就住这儿，结束第一天。",
+    drive:{min:50, km:55},
+    path:[[57.2750,-5.7297],[57.2710,-5.7350],[57.2400,-5.8420],[57.2890,-6.1730],[57.3500,-6.1900],[57.4125,-6.1942]],
+    media:[]
+  }
+];
+/* ============================================================
+   ↑↑↑  以上是你要改的;下面是逻辑,一般不用动  ↑↑↑
+   ============================================================ */
+
+const reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+// 时长格式化
+const fmt = m => { const h=Math.floor(m/60), n=m%60; return h? (n? h+'H '+n+'M' : h+'H') : n+'M'; };
+const fmtShort = m => { const h=Math.floor(m/60), n=m%60; return h? (n? h+'H'+n : h+'H') : n+'M'; };
+
+// 顶部读数
+let totMin=0, totKm=0;
+STOPS.forEach(s=>{ if(s.drive){ totMin+=s.drive.min; totKm+=s.drive.km; }});
+document.getElementById('tDur').innerHTML   = fmt(totMin);
+document.getElementById('tKm').innerHTML    = totKm+'<small>KM</small>';
+document.getElementById('tStops').innerHTML = String(STOPS.length).padStart(2,'0');
+
+// 地图(暗色仪表底图)
+const map = L.map('map',{ zoomControl:true, attributionControl:false }).setView([56.8,-5.3],8);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{ subdomains:'abcd', maxZoom:19 }).addTo(map);
+
+// 全程底衬
+const full = [].concat(...STOPS.filter(s=>s.path).map(s=>s.path));
+L.polyline(full,{ color:'#000', weight:7, opacity:.6, lineJoin:'round', lineCap:'round' }).addTo(map);
+
+// 分段路线 + 路线上的行车时间标签(按到达点索引 1..n-1)
+const legLines={}, legLabels={};
+STOPS.forEach((s,i)=>{
+  if(!s.path) return;
+  legLines[i] = L.polyline(s.path,{ color:'#f2f2f0', weight:2.6, opacity:.95, lineJoin:'round', lineCap:'round' }).addTo(map);
+  const mid = s.path[Math.floor(s.path.length/2)];
+  legLabels[i] = L.marker(mid,{
+    icon:L.divIcon({ className:'leg-label', html:`<span class="lab">${fmtShort(s.drive.min)}</span>`, iconSize:[1,1] }),
+    interactive:false, keyboard:false
+  }).addTo(map);
+});
+
+function highlightLeg(i){
+  Object.keys(legLines).forEach(k=>{
+    const on = (+k===i);
+    legLines[k].setStyle(on? {color:'#ffffff',weight:5,opacity:1} : {color:'#6c6c6e',weight:2,opacity:.7});
+    const el = legLabels[k].getElement(); if(el) el.classList.toggle('hot', on);
+  });
+}
+function resetLegs(){
+  Object.keys(legLines).forEach(k=>{
+    legLines[k].setStyle({color:'#f2f2f0',weight:2.6,opacity:.95});
+    const el = legLabels[k].getElement(); if(el) el.classList.remove('hot');
+  });
+}
+
+// 占位图标
+const CAM='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2l1.2-1.8A1 1 0 0 1 8.5 5h7a1 1 0 0 1 .8.4L17.5 7h2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.5" r="3.2"/></svg>';
+function mediaHTML(media){
+  if(!media||!media.length) return `<div class="ph">${CAM}<span>放上你的照片或视频</span></div>`;
+  return media.map(m=>{
+    if(m.type==='image') return `<img src="${m.src}" alt="" loading="lazy">`;
+    if(m.type==='video') return `<video src="${m.src}" controls preload="metadata"></video>`;
+    if(m.type==='embed') return `<div class="embed"><iframe src="${m.src}" allowfullscreen></iframe></div>`;
+    return '';
+  }).join('');
+}
+function popupHTML(s,i){
+  const meta = s.drive
+    ? `<div class="pb-meta"><div><div class="k">抵达前行车</div><div class="v">${fmt(s.drive.min)}</div></div><div><div class="k">里程</div><div class="v">${s.drive.km} KM</div></div><div><div class="k">到达</div><div class="v">${s.time||'—'}</div></div></div>`
+    : `<div class="pb-meta"><div><div class="k">状态</div><div class="v">起点</div></div><div><div class="k">出发</div><div class="v">${s.time||'—'}</div></div></div>`;
+  return `<div class="pm">${mediaHTML(s.media)}</div>
+    <div class="pb">
+      <div class="pb-num">STOP ${String(i+1).padStart(2,'0')} / ${String(STOPS.length).padStart(2,'0')}</div>
+      <h3>${s.name}</h3>
+      <div class="en">${s.en||''}</div>
+      ${meta}
+      ${s.note?`<p>${s.note}</p>`:''}
+      <div class="coord">${s.coords[0].toFixed(4)}°N · ${Math.abs(s.coords[1]).toFixed(4)}°W</div>
+    </div>`;
+}
+function pinIcon(i){
+  return L.divIcon({ className:'pin-wrap', html:`<div class="pin"><span>${i+1}</span></div>`,
+    iconSize:[30,30], iconAnchor:[15,15], popupAnchor:[0,-16] });
+}
+
+const markers=[];
+STOPS.forEach((s,i)=>{
+  const m=L.marker(s.coords,{ icon:pinIcon(i), riseOnHover:true }).addTo(map);
+  m.bindPopup(popupHTML(s,i),{ maxWidth:262, offset:[0,2] });
+  markers.push(m);
+  const el=m.getElement(); if(el && !reduce) el.classList.add('pin-drop');
+});
+
+// 右侧路书面板
+const rb=document.getElementById('rb');
+STOPS.forEach((s,i)=>{
+  if(s.drive){ // 先放「驾驶腿」
+    const leg=document.createElement('div');
+    leg.className='rb-row rb-leg';
+    leg.innerHTML=`<div class="rail">▾</div>
+      <div class="leg-body">
+        <div class="leg-tag">Drive · 行车</div>
+        <div class="leg-val">${fmt(s.drive.min)}<span class="dot">·</span>${s.drive.km}<span class="u">KM</span></div>
+      </div>`;
+    leg.addEventListener('mouseenter',()=>highlightLeg(i));
+    leg.addEventListener('mouseleave',resetLegs);
+    rb.appendChild(leg);
+  }
+  const stop=document.createElement('div'); // 再放停留点
+  stop.className='rb-row rb-stop';
+  stop.innerHTML=`<div class="rail"><div class="badge">${i+1}</div></div>
+    <div class="s-body">
+      <div><div class="s-name">${s.name}</div><div class="s-en">${s.en||''}</div></div>
+      <div class="s-time">${s.time||''}</div>
+    </div>`;
+  stop.addEventListener('click',()=>{
+    document.querySelectorAll('.rb-stop').forEach(x=>x.classList.remove('active'));
+    stop.classList.add('active');
+    map.flyTo(s.coords,11,{duration:1.1});
+    markers[i].openPopup();
+  });
+  rb.appendChild(stop);
+});
+
+// 框住整条路线
+map.fitBounds(L.polyline(full).getBounds(),{ padding:[50,50] });
+
+// 加载动画:路线一段段「开」出来,图钉与时间标签依次出现
+function drawLeg(line,delay,dur){
+  const p=line.getElement(); if(!p) return;
+  const len=p.getTotalLength();
+  p.style.transition='none'; p.style.strokeDasharray=len; p.style.strokeDashoffset=len;
+  p.getBoundingClientRect();
+  p.style.transition=`stroke-dashoffset ${dur}ms cubic-bezier(.4,0,.2,1) ${delay}ms`;
+  p.style.strokeDashoffset='0';
+  setTimeout(()=>{ p.style.strokeDasharray=''; p.style.strokeDashoffset=''; }, delay+dur+60);
+}
+const STEP=340;
+if(!reduce){
+  const keys=Object.keys(legLines).map(Number).sort((a,b)=>a-b);
+  setTimeout(()=>{
+    keys.forEach((k,idx)=>drawLeg(legLines[k], idx*STEP, 360));
+    // 起点图钉立刻落
+    const m0=markers[0].getElement(); if(m0) requestAnimationFrame(()=>m0.classList.add('in'));
+    keys.forEach((k,idx)=>{
+      setTimeout(()=>{
+        const me=markers[k].getElement(); if(me) me.classList.add('in');
+        const le=legLabels[k].getElement(); if(le) le.classList.add('show');
+      }, (idx+1)*STEP);
+    });
+  },260);
+}else{
+  markers.forEach(m=>{const e=m.getElement(); if(e) e.classList.add('in');});
+  Object.values(legLabels).forEach(l=>{const e=l.getElement(); if(e) e.classList.add('show');});
+}
+</script>
+</body>
+</html>
