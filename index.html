@@ -12,15 +12,9 @@
 
 <style>
   :root{
-    --bg:#0c0c0e;          /* 近黑底色 · 仪表盘 */
-    --bg-2:#151518;        /* 面板 / 卡片 */
-    --bg-3:#1d1d21;        /* 抬升层 */
-    --fg:#f2f2f0;          /* 近白主字 */
-    --fg-2:#a6a6a4;        /* 灰 · 次要 */
-    --fg-3:#6c6c6e;        /* 暗灰 · 标签 */
-    --line:#27272b;
-    --line-2:#3a3a3e;
-    --white:#ffffff;
+    --bg:#0c0c0e; --bg-2:#151518; --bg-3:#1d1d21;
+    --fg:#f2f2f0; --fg-2:#a6a6a4; --fg-3:#6c6c6e;
+    --line:#27272b; --line-2:#3a3a3e; --white:#ffffff;
     --display:'Space Grotesk','Noto Sans SC',sans-serif;
     --mono:'Space Mono','SFMono-Regular',ui-monospace,monospace;
     --body:'Inter','Noto Sans SC',system-ui,-apple-system,sans-serif;
@@ -29,7 +23,7 @@
   html,body{background:var(--bg);color:var(--fg);font-family:var(--body);-webkit-font-smoothing:antialiased}
   body{display:flex;flex-direction:column;min-height:100vh}
 
-  /* ---------- 顶部:仪表读数 ---------- */
+  /* 顶部读数 */
   .hd{padding:30px clamp(20px,5vw,56px) 0;position:relative}
   .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.42em;color:var(--fg-3);text-transform:uppercase;margin-bottom:15px}
   .hd h1{font-family:var(--display);font-weight:700;letter-spacing:-.02em;font-size:clamp(34px,6.6vw,64px);line-height:.92;color:var(--white)}
@@ -37,19 +31,25 @@
   .readout{display:flex;margin-top:24px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
   .ro{flex:1;padding:15px 0 16px}
   .ro+.ro{border-left:1px solid var(--line);padding-left:clamp(12px,2.5vw,26px)}
-  .ro-l{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--fg-3);text-transform:uppercase;margin-bottom:8px}
+  .ro-l{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--fg-3);text-transform:uppercase;margin-bottom:8px;white-space:nowrap}
   .ro-v{font-family:var(--mono);font-weight:700;color:var(--white);font-size:clamp(22px,3.8vw,36px);line-height:1;letter-spacing:-.01em;white-space:nowrap}
   .ro-v small{font-size:.5em;color:var(--fg-2);font-weight:400;margin-left:3px;letter-spacing:0}
 
-  /* ---------- 主区域 ---------- */
+  /* 主区域 */
   .layout{flex:1;display:flex;min-height:0;padding:clamp(16px,3vw,28px) clamp(20px,5vw,56px)}
   .map-frame{flex:1;min-height:0;border:1px solid var(--line-2);position:relative;overflow:hidden}
   #map{position:absolute;inset:0;background:#0c0c0e}
   .map-frame::before,.map-frame::after{content:"";position:absolute;width:14px;height:14px;z-index:500;pointer-events:none;border-color:var(--white);border-style:solid;border-width:0}
   .map-frame::before{top:9px;left:9px;border-top-width:1.5px;border-left-width:1.5px}
   .map-frame::after{bottom:9px;right:9px;border-bottom-width:1.5px;border-right-width:1.5px}
-  /* 加载提示 */
   .loading{position:absolute;z-index:600;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--bg);background:rgba(255,255,255,.92);padding:9px 16px;border-radius:3px;text-transform:uppercase;pointer-events:none;transition:opacity .4s}
+
+  /* 底图切换 */
+  .basemap-sw{position:absolute;z-index:600;top:9px;right:30px;display:flex;background:rgba(12,12,14,.82);border:1px solid var(--line-2);border-radius:4px;overflow:hidden;backdrop-filter:blur(4px)}
+  .basemap-sw button{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--fg-2);background:none;border:none;border-right:1px solid var(--line-2);padding:7px 11px;cursor:pointer;transition:all .15s}
+  .basemap-sw button:last-child{border-right:none}
+  .basemap-sw button:hover{color:var(--white)}
+  .basemap-sw button.on{background:var(--white);color:var(--bg)}
 
   .panel{width:374px;flex-shrink:0;margin-left:clamp(16px,3vw,28px);display:flex;flex-direction:column;min-height:0;border:1px solid var(--line);background:var(--bg-2)}
   .panel-hd{font-family:var(--mono);font-size:11px;letter-spacing:.3em;color:var(--fg-2);text-transform:uppercase;padding:18px 24px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
@@ -58,20 +58,17 @@
   .rb::-webkit-scrollbar{width:8px}
   .rb::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:8px}
 
-  /* 日期分隔 */
   .day-sep{display:flex;align-items:center;gap:12px;padding:18px 24px 10px;position:sticky;top:0;background:var(--bg-2);z-index:3}
   .day-sep .dl{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.16em;color:var(--white);text-transform:uppercase}
   .day-sep .dd{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--fg-3)}
   .day-sep .rule{flex:1;height:1px;background:var(--line-2)}
 
   .rb-row{display:grid;grid-template-columns:54px 1fr;align-items:center;position:relative}
-  /* 轴线:贯穿每个 row 的 rail 列 */
   .rb-row .rail{position:relative;align-self:stretch;display:flex;justify-content:center;align-items:center}
   .rb-row .rail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line-2);transform:translateX(-.5px)}
   .rb-row.first-of-day .rail::before{top:50%}
   .rb-row.last-row .rail::before{bottom:50%}
 
-  /* —— 停留点 —— */
   .rb-stop{padding:9px 22px 9px 0;cursor:pointer}
   .badge{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:12px;background:var(--bg);color:var(--fg);border:1.5px solid var(--line-2);transition:all .16s;z-index:1}
   .rb-stop:hover .badge{border-color:var(--fg);color:var(--white)}
@@ -83,7 +80,6 @@
   .s-time{font-family:var(--mono);font-size:13.5px;color:var(--fg-2);flex-shrink:0}
   .rb-stop.active .s-time{color:var(--white)}
 
-  /* —— 驾驶腿(重点)—— */
   .rb-leg{padding:1px 22px 1px 0;cursor:default}
   .rb-leg .rail{color:var(--fg-3);font-size:11px}
   .rb-leg .rail .chev{position:relative;z-index:1;background:var(--bg-2);padding:2px 0;line-height:1}
@@ -95,9 +91,8 @@
   .leg-val .dot{color:var(--fg-3);font-weight:400;padding:0 6px}
   .leg-val .u{font-size:.68em;color:var(--fg-2);font-weight:400;margin-left:2px}
 
-  /* ---------- 地图:停留图钉 ---------- */
   .pin-wrap{background:none;border:none}
-  .pin{width:30px;height:30px;border-radius:50%;background:#18181c;display:grid;place-items:center;box-shadow:0 2px 9px rgba(0,0,0,.45);border:2px solid var(--white);transition:transform .18s}
+  .pin{width:30px;height:30px;border-radius:50%;background:#18181c;display:grid;place-items:center;box-shadow:0 2px 9px rgba(0,0,0,.5);border:2px solid var(--white);transition:transform .18s}
   .pin span{font-family:var(--mono);font-weight:700;font-size:12.5px;color:var(--white);line-height:1}
   .leaflet-marker-icon:hover .pin{transform:scale(1.18)}
   .pin.cur{background:var(--white);border-color:#18181c}
@@ -105,24 +100,19 @@
   .pin-drop{opacity:0;transform:scale(.3) translateY(-12px);transition:transform .42s cubic-bezier(.34,1.4,.5,1),opacity .3s}
   .pin-drop.in{opacity:1;transform:scale(1) translateY(0)}
 
-  /* 沿途照片点(挂在路径上) */
   .via-wrap{background:none;border:none}
-  .via{width:24px;height:24px;border-radius:5px;background:#18181c;border:2px solid var(--white);display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.5);cursor:pointer;transition:transform .16s}
-  .via:hover{transform:scale(1.2) rotate(0deg)}
+  .via{width:24px;height:24px;border-radius:5px;background:#18181c;border:2px solid var(--white);display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.55);cursor:pointer;transition:transform .16s}
+  .via:hover{transform:scale(1.2)}
   .via svg{width:13px;height:13px;color:var(--white)}
   .via-drop{opacity:0;transform:scale(.2);transition:transform .4s cubic-bezier(.34,1.4,.5,1),opacity .3s}
   .via-drop.in{opacity:1;transform:scale(1)}
 
-  /* 路径上的「行车时间」标签 */
   .leg-label{background:none;border:none}
-  .leg-label .lab{display:inline-block;font-family:var(--mono);font-weight:700;font-size:11px;color:#1a1a1d;background:rgba(255,255,255,.94);border:1px solid rgba(0,0,0,.15);padding:2px 7px;border-radius:2px;white-space:nowrap;letter-spacing:.02em;box-shadow:0 1px 5px rgba(0,0,0,.25);transition:all .16s;opacity:0;transform:scale(.8)}
+  .leg-label .lab{display:inline-block;font-family:var(--mono);font-weight:700;font-size:11px;color:#1a1a1d;background:rgba(255,255,255,.94);border:1px solid rgba(0,0,0,.15);padding:2px 7px;border-radius:2px;white-space:nowrap;letter-spacing:.02em;box-shadow:0 1px 5px rgba(0,0,0,.3);transition:all .16s;opacity:0;transform:scale(.8)}
   .leg-label.show .lab{opacity:1;transform:scale(1)}
   .leg-label.hot .lab{color:var(--white);background:#18181c;border-color:#18181c}
 
-  /* 路线描边(白色光晕,叠在彩色地图上) */
-  .leaflet-overlay-pane path.route{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.9))}
-
-  /* ---------- 弹窗 ---------- */
+  /* 弹窗 */
   .leaflet-popup-content-wrapper{background:var(--bg-2);border:1px solid var(--line-2);border-radius:4px;padding:0;overflow:hidden;box-shadow:0 14px 44px rgba(0,0,0,.55)}
   .leaflet-popup-content{margin:0;width:264px!important;line-height:1.4}
   .leaflet-popup-tip{background:var(--bg-2);border:1px solid var(--line-2)}
@@ -136,9 +126,9 @@
   .pm img,.pm video{display:block;width:100%;height:160px;object-fit:cover}
   .pm .embed{position:relative;width:100%;padding-top:56.25%}
   .pm .embed iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-  .pm .ph{height:118px;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;color:var(--fg-3);border-bottom:1px solid var(--line);background:repeating-linear-gradient(-45deg,transparent,transparent 9px,rgba(255,255,255,.02) 9px,rgba(255,255,255,.02) 18px)}
-  .pm .ph svg{width:24px;height:24px;opacity:.5}
-  .pm .ph span{font-family:var(--mono);font-size:10px;letter-spacing:.04em}
+  .pm .ph{height:118px;display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;border:2px solid #e23b30;background:rgba(226,59,48,.08)}
+  .pm .ph .uc{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.14em;color:#e23b30}
+  .pm .ph .ucs{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:#e23b30;opacity:.85;text-transform:uppercase}
   .pm .cnt{position:absolute;right:8px;bottom:8px;font-family:var(--mono);font-size:9px;color:#fff;background:rgba(0,0,0,.6);padding:2px 6px;border-radius:2px;letter-spacing:.08em}
 
   .pb{padding:15px 17px 16px}
@@ -154,8 +144,10 @@
   .pb p+p{margin-top:8px}
   .pb p .lead{color:var(--white);font-weight:500}
   .pb .coord{font-family:var(--mono);font-size:10px;color:var(--fg-3);margin-top:11px;letter-spacing:.04em}
+  .gmaps{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:13px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fg);text-decoration:none;border:1px solid var(--line-2);border-radius:3px;padding:9px 11px;transition:all .15s}
+  .gmaps:hover{background:var(--white);color:var(--bg);border-color:var(--white)}
+  .gmaps svg{width:13px;height:13px}
 
-  /* ---------- 页脚 ---------- */
   footer{padding:13px clamp(20px,5vw,56px);font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--fg-3);border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;text-transform:uppercase}
   footer a{color:var(--fg-2);text-decoration:none}
   footer a:hover{color:var(--white)}
@@ -166,6 +158,9 @@
     .panel{width:100%;flex:none;margin-left:0;margin-top:16px}
     .rb{overflow:visible}
     .day-sep{position:static}
+    .basemap-sw{right:9px}
+    .ro-l{font-size:8.5px;letter-spacing:.08em}
+    .ro+.ro{padding-left:12px}
     body{min-height:auto}
   }
   @media (prefers-reduced-motion:reduce){
@@ -177,7 +172,7 @@
 <body>
 
   <header class="hd">
-    <div class="eyebrow">Roadbook · 自驾路书</div>
+    <div class="eyebrow">Cyrus 的自驾路书</div>
     <h1>天空岛之路</h1>
     <div class="sub">Glasgow → Skye → Inverness → Glasgow</div>
     <div class="readout">
@@ -191,6 +186,11 @@
   <main class="layout">
     <div class="map-frame">
       <div id="map"></div>
+      <div class="basemap-sw" id="basemapSw">
+        <button data-b="sat" class="on">卫星</button>
+        <button data-b="ter">地形</button>
+        <button data-b="min">简约</button>
+      </div>
       <div class="loading" id="loading">绘制真实路线…</div>
     </div>
     <aside class="panel">
@@ -201,24 +201,22 @@
 
   <footer>
     <span id="footLeft"></span>
-    <span>© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a> · Routing © <a href="http://project-osrm.org/" target="_blank" rel="noopener">OSRM</a></span>
+    <span>Tiles © <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a> · <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OSM</a> · Routing © <a href="http://project-osrm.org/" target="_blank" rel="noopener">OSRM</a></span>
   </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
 /* ============================================================
    ↓↓↓  你的旅程数据 —— 改这里就行  ↓↓↓
-
-   每个停留点 stop:
-     coords:[纬度,经度]   Google 地图右键任意点即可复制
-     time   到达/事件时间
-     note   描述(数组,每个元素是一段;首段想加粗就写 lead:true)
-     media  照片/视频(可多张,弹窗内左右滑动),留空显示占位:
-            {type:'image', src:'链接'} / {type:'video', src:'.mp4'} / {type:'embed', src:'YouTube或B站embed链接'}
-     drive  ★从上一个停留点开过来这一段:{min:分钟, km:公里}  ← 全程第一个点没有
-     via    ★挂在「这段路」上的沿途照片点(数组),例如途中的风景、偶遇的高地牛:
-            {name, coords:[纬,经], time, note, media}
-   说明:路径由实时导航路由自动绘制(真实公路),你只要给对坐标即可。
+   coords:[纬度,经度]   Google 地图右键任意点即可复制
+   pid     该地点的 Google Place ID(可选)。填了"在 Google 地图打开"会直达该店/景点卡片;
+           不填则按坐标打开。怎么拿:在 Google 地图搜到该点→分享→里面那串 ChIJ... 即是
+   time    到达/事件时间
+   note    描述数组,每段一个对象;首段想加粗写 lead:true
+   media   照片/视频(可多张,弹窗内左右滑动),留空显示占位:
+           {type:'image',src:'链接'} / {type:'video',src:'.mp4'} / {type:'embed',src:'YouTube或B站embed'}
+   drive   ★从上一个停留点开过来这段:{min:分钟, km:公里}  ← 全程第一个点没有
+   via     ★挂在这段路上的沿途照片点(数组):{name,en,coords,time,note,media,pid}
    ============================================================ */
 const TRIP = { days: [
   { label:"Day 01", date:"周六 · Sat", stops:[
@@ -226,15 +224,15 @@ const TRIP = { days: [
       note:[{t:"清晨从西区出发，向北驶入高地。",lead:true}], media:[] },
 
     { name:"罗蒙湖 · 卢斯", en:"Loch Lomond · Luss", coords:[56.1009,-4.6383], time:"约 09:50",
-      drive:{min:45,km:43},
+      pid:"ChIJxxA4wbuqiUgRnKwp7dFG6XQ", drive:{min:45,km:43},
       note:[{t:"在 Luss General Store 喝了杯咖啡，味道还不错；湖边逛了逛。"}], media:[] },
 
-    { name:"巴洛赫", en:"Balloch", coords:[56.0026,-4.5838], time:"约 10:55",
-      drive:{min:12,km:11},
+    { name:"巴洛赫", en:"Balloch · Lomond Fish Bar", coords:[56.0026,-4.5838], time:"约 10:55",
+      pid:"ChIJb-9AnTlTiEgR4vliWnTLIWA", drive:{min:12,km:11},
       note:[{t:"本想吃 Lomond Fish Bar，结果周六下午三点半才开门，于是隔壁麦当劳打包带走。"}], media:[] },
 
     { name:"格莱芬南高架桥", en:"Glenfinnan Viaduct", coords:[56.8708,-5.4352], time:"拍完 15:20",
-      drive:{min:135,km:168},
+      pid:"ChIJjTVuLw2zjkgRBjRRwZFYvIA", drive:{min:135,km:168},
       note:[{t:"时间有限，停好车一路小跑爬上观景位，赶在火车经过时拍到了蒸汽小火车的视频。停车挺方便。",lead:true}],
       via:[
         { name:"沿途风景 · 格伦科", en:"Glen Coe en route", coords:[56.6774,-5.0086], time:"途中",
@@ -242,11 +240,11 @@ const TRIP = { days: [
       ], media:[] },
 
     { name:"Sammy's 鱼薯店", en:"Sammy's Fish & Chips · Caol", coords:[56.8380,-5.1010], time:"小票 16:58",
-      drive:{min:25,km:30},
+      pid:"ChIJp5Grm73MjkgRwNB9UdAEcQE", drive:{min:25,km:30},
       note:[{t:"鱼挺好吃；炸海鲜还行，炸裹粉英式香肠也还行。"},{t:"不过我点错了——一开始想点红色那个；薯条和派挺难吃。"}], media:[] },
 
     { name:"威廉堡补给 · Aldi + M&S", en:"Fort William · North Road", coords:[56.8281,-5.0830], time:"约 17:30",
-      drive:{min:6,km:3},
+      pid:"ChIJXWdEk8jMjkgR8HKcrZlnku0", drive:{min:6,km:3},
       note:[{t:"North Road 零售园区，Aldi 和 M&S Foodhall 紧挨着，补给一下再上岛。"}], media:[] },
 
     { name:"斯塔芬 · 民宿", en:"Staffin · B&B", coords:[57.6175,-6.2083], time:"21:13",
@@ -256,46 +254,47 @@ const TRIP = { days: [
 
   { label:"Day 02", date:"周日 · Sun", stops:[
     { name:"两处瀑布", en:"Lealt Falls · Kilt Rock", coords:[57.6101,-6.1728], time:"上午",
-      drive:{min:6,km:6},
+      pid:"ChIJo1z9m2_RjUgRcsufKEnqSoU", drive:{min:6,km:6},
       note:[{t:"出发先顺路看了两个瀑布景点：Lealt Falls 与 Kilt Rock / Mealt Falls。"}], media:[] },
 
     { name:"老人岩", en:"Old Man of Storr", coords:[57.4993,-6.1584], time:"约 10:20",
-      drive:{min:12,km:12},
+      pid:"ChIJsafGmVnNjUgR655wsjZ5LX8", drive:{min:12,km:12},
       note:[{t:"十点多到，大晴天景色非常好；晴天也非常好爬，几乎没难度。",lead:true},{t:"可惜夏天不能飞无人机。"}], media:[] },
 
     { name:"波特里", en:"Portree · 阿强面馆 + Birch", coords:[57.4127,-6.1932], time:"12:21 点餐",
-      drive:{min:15,km:11},
+      pid:"ChIJy1m-zj0zjEgRNwF5n2CDsXs", drive:{min:15,km:11},
       note:[
         {t:"网红『阿强面馆』：12:21 点餐，约 25 分钟上桌，味道还行。",lead:true},
         {t:"旁边 Birch 咖啡(号称世界前 100)：美式不错，冰拿铁老实讲不太行，手冲有点像增味豆，蛋挞和饼干是英国平均水平——总体推荐。"}
       ], media:[] },
 
     { name:"Neist Point 灯塔", en:"Neist Point Lighthouse", coords:[57.4235,-6.7883], time:"14:30 到",
-      drive:{min:80,km:55},
+      pid:"ChIJuQIXvINUjEgRI7wn4Qk-9Xg", drive:{min:80,km:55},
       note:[{t:"13:30 出发，14:30 到。晴天的灯塔区非常漂亮，玩了很长一段时间，16:15 离开。",lead:true}], media:[] },
 
     { name:"因弗内斯 · Pasha", en:"Inverness · Pasha Turkish", coords:[57.4792,-4.2267], time:"21:00",
-      drive:{min:225,km:180},
+      pid:"ChIJI1ijD6Fxj0gRoeeOru-XLmw", drive:{min:225,km:180},
       note:[
         {t:"因弗内斯最高分土耳其菜(Pasha)：服务态度挺好，送了很多东西。",lead:true},
         {t:"烤肉本身还不错；米饭、凉菜、饼、甜点都不太行，ayran 太酸我喝不惯。"}
       ],
       via:[
         { name:"高地牛 · Sconser", en:"Highland Cow · Sconser", coords:[57.3088,-6.0946], time:"17:40",
+          pid:"ChIJm2e4gHgljEgR4l5U71FlT0Q",
           note:[{t:"灯塔后回 Portree 补给，路上在 Sconser 遇到高地牛(17:40)。可互动的农场周日没开；顺便加了油。"}], media:[] }
       ], media:[] }
   ]},
 
   { label:"Day 03", date:"周一 · Mon", stops:[
     { name:"格兰塔酒厂", en:"The Glenturret · Crieff", coords:[56.3892,-3.8531], time:"11:55",
-      drive:{min:150,km:148},
+      pid:"ChIJb_Yfx-qbiEgRFmmpPe_46so", drive:{min:150,km:148},
       note:[
         {t:"因弗内斯吃了本地早餐店，9:15 出发，11:55 到 Glenturret。",lead:true},
         {t:"Triple Wood 挺好的小甜水；25 限量款我觉得一般；25 年顺滑但不太匹配价格。酒厂本身不错——下次还是想去泰斯卡那种大厂。"}
       ], media:[] },
 
     { name:"斯特灵 · 星巴克", en:"Stirling · Starbucks", coords:[56.1338,-3.9661], time:"13:00",
-      drive:{min:50,km:50},
+      pid:"ChIJr4Qdwr1jiEgRf0XCa5_IPpE", drive:{min:50,km:50},
       note:[{t:"回程在斯特灵的星巴克喝了点咖啡。"}], media:[] },
 
     { name:"格拉斯哥", en:"Glasgow", coords:[55.8642,-4.2518], time:"15:00",
@@ -311,7 +310,16 @@ const reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
 const fmt = m => { const h=Math.floor(m/60), n=m%60; return h? (n? h+'H '+n+'M' : h+'H') : n+'M'; };
 const fmtShort = m => { const h=Math.floor(m/60), n=m%60; return h? (n? h+'H'+n : h+'H') : n+'M'; };
 
-// 拍平所有停留点(保留 day 边界标记)
+// 路线主题(随底图深浅自动切换)
+let DARK = true;
+const legLines={}, legLabels={};
+function routeCore(){ return DARK ? '#ffffff' : '#1b1b1f'; }
+function routeHalo(){ return DARK ? 'drop-shadow(0 0 2px rgba(0,0,0,.85))' : 'drop-shadow(0 0 1.6px rgba(255,255,255,.92))'; }
+function applyRouteTheme(){
+  Object.values(legLines).forEach(l=>{ l.setStyle({color:routeCore(),weight:3.4,opacity:.95}); const e=l.getElement(); if(e) e.style.filter=routeHalo(); });
+}
+
+// 拍平所有停留点
 const STOPS=[];
 TRIP.days.forEach((d,di)=>d.stops.forEach((s,si)=>{
   STOPS.push(Object.assign({}, s, { _day:di, _firstOfDay:si===0, _dayLabel:d.label, _dayDate:d.date }));
@@ -327,47 +335,66 @@ document.getElementById('tStops').textContent= String(STOPS.length).padStart(2,'
 document.getElementById('legCount').textContent = (STOPS.length-1)+' LEGS';
 document.getElementById('footLeft').textContent = 'GLA · SKY · INV · GLA — '+TRIP.days.length+' DAYS / '+fmtShort(totMin);
 
-// 地图(彩色底图)
+// 地图 + 多底图
 const map=L.map('map',{ zoomControl:true, attributionControl:false }).setView([57,-5.3],7);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{ subdomains:'abcd', maxZoom:19 }).addTo(map);
+const tileSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
+const tileSatRef = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
+const tileTer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19});
+const tileMin = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19});
+const BASES={ sat:{add:[tileSat,tileSatRef],dark:true}, ter:{add:[tileTer],dark:false}, min:{add:[tileMin],dark:false} };
+let curBase=null;
+function setBase(key){
+  if(curBase) BASES[curBase].add.forEach(l=>map.removeLayer(l));
+  BASES[key].add.forEach(l=>l.addTo(map));
+  curBase=key; DARK=BASES[key].dark; applyRouteTheme();
+  document.querySelectorAll('#basemapSw button').forEach(b=>b.classList.toggle('on',b.dataset.b===key));
+}
+setBase('sat');
+document.querySelectorAll('#basemapSw button').forEach(b=>b.addEventListener('click',()=>setBase(b.dataset.b)));
 
-// 占位/相机图标
+// 图标
 const CAM='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2l1.2-1.8A1 1 0 0 1 8.5 5h7a1 1 0 0 1 .8.4L17.5 7h2A1.5 1.5 0 0 1 21 8.5v9A1.5 1.5 0 0 1 19.5 19h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.5" r="3.2"/></svg>';
+const PIN='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>';
 
+function gmap(o){
+  if(o.pid) return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(o.name)+'&query_place_id='+o.pid;
+  return 'https://www.google.com/maps/search/?api=1&query='+o.coords[0]+','+o.coords[1];
+}
 function mediaHTML(media){
-  if(!media||!media.length) return `<div class="ph">${CAM}<span>放上你的照片或视频</span></div>`;
+  if(!media||!media.length) return '<div class="ph"><div class="uc">施工中</div><div class="ucs">Under Construction</div></div>';
   const inner=media.map(m=>{
-    if(m.type==='image') return `<img src="${m.src}" alt="" loading="lazy">`;
-    if(m.type==='video') return `<video src="${m.src}" controls preload="metadata"></video>`;
-    if(m.type==='embed') return `<div class="embed"><iframe src="${m.src}" allowfullscreen></iframe></div>`;
+    if(m.type==='image') return '<img src="'+m.src+'" alt="" loading="lazy">';
+    if(m.type==='video') return '<video src="'+m.src+'" controls preload="metadata"></video>';
+    if(m.type==='embed') return '<div class="embed"><iframe src="'+m.src+'" allowfullscreen></iframe></div>';
     return '';
   }).join('');
-  const cnt = media.length>1 ? `<div class="cnt">1 / ${media.length} ›</div>` : '';
-  return `<div class="slide">${inner}</div>${cnt}`;
+  const cnt = media.length>1 ? '<div class="cnt">1 / '+media.length+' ›</div>' : '';
+  return '<div class="slide">'+inner+'</div>'+cnt;
 }
-function noteHTML(note){ return (note||[]).map(p=>`<p>${p.lead?`<span class="lead">${p.t}</span>`:p.t}</p>`).join(''); }
-function coordHTML(c){ return `${c[0].toFixed(4)}°N · ${Math.abs(c[1]).toFixed(4)}°W`; }
+function noteHTML(note){ return (note||[]).map(p=>'<p>'+(p.lead?'<span class="lead">'+p.t+'</span>':p.t)+'</p>').join(''); }
+function coordHTML(c){ return c[0].toFixed(4)+'°N · '+Math.abs(c[1]).toFixed(4)+'°W'; }
+function gmapBtn(o){ return '<a class="gmaps" href="'+gmap(o)+'" target="_blank" rel="noopener">'+PIN+'在 Google 地图打开</a>'; }
 
 function popupStop(s,i){
   const meta = s.drive
-    ? `<div class="pb-meta"><div><div class="k">本段行车</div><div class="v">${fmt(s.drive.min)}</div></div><div><div class="k">里程</div><div class="v">${s.drive.km} KM</div></div><div><div class="k">时间</div><div class="v">${s.time||'—'}</div></div></div>`
-    : `<div class="pb-meta"><div><div class="k">状态</div><div class="v">起点</div></div><div><div class="k">出发</div><div class="v">${s.time||'—'}</div></div></div>`;
-  return `<div class="pm">${mediaHTML(s.media)}</div><div class="pb">
-    <div class="pb-num">STOP ${String(i+1).padStart(2,'0')} / ${String(STOPS.length).padStart(2,'0')} · ${s._dayLabel.toUpperCase()}</div>
-    <h3>${s.name}</h3><div class="en">${s.en||''}</div>${meta}${noteHTML(s.note)}
-    <div class="coord">${coordHTML(s.coords)}</div></div>`;
+    ? '<div class="pb-meta"><div><div class="k">本段行车</div><div class="v">'+fmt(s.drive.min)+'</div></div><div><div class="k">里程</div><div class="v">'+s.drive.km+' KM</div></div><div><div class="k">时间</div><div class="v">'+(s.time||'—')+'</div></div></div>'
+    : '<div class="pb-meta"><div><div class="k">状态</div><div class="v">起点</div></div><div><div class="k">出发</div><div class="v">'+(s.time||'—')+'</div></div></div>';
+  return '<div class="pm">'+mediaHTML(s.media)+'</div><div class="pb">'
+    +'<div class="pb-num">STOP '+String(i+1).padStart(2,'0')+' / '+String(STOPS.length).padStart(2,'0')+' · '+s._dayLabel.toUpperCase()+'</div>'
+    +'<h3>'+s.name+'</h3><div class="en">'+(s.en||'')+'</div>'+meta+noteHTML(s.note)
+    +'<div class="coord">'+coordHTML(s.coords)+'</div>'+gmapBtn(s)+'</div>';
 }
 function popupVia(v){
-  return `<div class="pm">${mediaHTML(v.media)}</div><div class="pb">
-    <div class="pb-num">沿途 · EN ROUTE${v.time?' · '+v.time:''}</div>
-    <h3>${v.name}</h3>${v.en?`<div class="en">${v.en}</div>`:''}${noteHTML(v.note)}
-    <div class="coord">${coordHTML(v.coords)}</div></div>`;
+  return '<div class="pm">'+mediaHTML(v.media)+'</div><div class="pb">'
+    +'<div class="pb-num">沿途 · EN ROUTE'+(v.time?' · '+v.time:'')+'</div>'
+    +'<h3>'+v.name+'</h3>'+(v.en?'<div class="en">'+v.en+'</div>':'')+noteHTML(v.note)
+    +'<div class="coord">'+coordHTML(v.coords)+'</div>'+gmapBtn(v)+'</div>';
 }
 
 // 停留图钉
 const markers=[];
 STOPS.forEach((s,i)=>{
-  const m=L.marker(s.coords,{ icon:L.divIcon({className:'pin-wrap',html:`<div class="pin"><span>${i+1}</span></div>`,iconSize:[30,30],iconAnchor:[15,15],popupAnchor:[0,-15]}), riseOnHover:true }).addTo(map);
+  const m=L.marker(s.coords,{ icon:L.divIcon({className:'pin-wrap',html:'<div class="pin"><span>'+(i+1)+'</span></div>',iconSize:[30,30],iconAnchor:[15,15],popupAnchor:[0,-15]}), riseOnHover:true }).addTo(map);
   m.bindPopup(popupStop(s,i),{maxWidth:264,offset:[0,1]});
   m.on('popupopen',()=>setActive(i,true));
   markers.push(m);
@@ -375,42 +402,39 @@ STOPS.forEach((s,i)=>{
 });
 
 // 沿途照片点
-const viaMarkers={}; // key: 到达点 index -> [marker,...]
+const viaMarkers={};
 STOPS.forEach((s,i)=>{
   if(!s.via) return;
   viaMarkers[i]=s.via.map(v=>{
-    const m=L.marker(v.coords,{ icon:L.divIcon({className:'via-wrap',html:`<div class="via">${CAM}</div>`,iconSize:[24,24],iconAnchor:[12,12],popupAnchor:[0,-12]}) }).addTo(map);
+    const m=L.marker(v.coords,{ icon:L.divIcon({className:'via-wrap',html:'<div class="via">'+CAM+'</div>',iconSize:[24,24],iconAnchor:[12,12],popupAnchor:[0,-12]}) }).addTo(map);
     m.bindPopup(popupVia(v),{maxWidth:264});
     const el=m.getElement(); if(el&&!reduce) el.classList.add('via-drop');
     return m;
   });
 });
 
-// 行车时间标签(仅给 ≥20 分钟的大段，避免拥挤)
-const legLines={}, legLabels={};
-
-// ---- 右侧路书面板 ----
+// 右侧路书面板
 const rb=document.getElementById('rb');
 let lastRow=null;
 STOPS.forEach((s,i)=>{
   if(s._firstOfDay){
     const sep=document.createElement('div'); sep.className='day-sep';
-    sep.innerHTML=`<span class="dl">${s._dayLabel}</span><span class="dd">${s._dayDate}</span><span class="rule"></span>`;
+    sep.innerHTML='<span class="dl">'+s._dayLabel+'</span><span class="dd">'+s._dayDate+'</span><span class="rule"></span>';
     rb.appendChild(sep);
   }
   if(s.drive){
     const leg=document.createElement('div'); leg.className='rb-row rb-leg'+(s._firstOfDay?' first-of-day':'');
-    leg.innerHTML=`<div class="rail"><span class="chev">▾</span></div>
-      <div class="leg-body"><div class="leg-tag">Drive · 行车</div>
-      <div class="leg-val">${fmt(s.drive.min)}<span class="dot">·</span>${s.drive.km}<span class="u">KM</span></div></div>`;
+    leg.innerHTML='<div class="rail"><span class="chev">▾</span></div>'
+      +'<div class="leg-body"><div class="leg-tag">Drive · 行车</div>'
+      +'<div class="leg-val">'+fmt(s.drive.min)+'<span class="dot">·</span>'+s.drive.km+'<span class="u">KM</span></div></div>';
     leg.addEventListener('mouseenter',()=>highlightLeg(i));
     leg.addEventListener('mouseleave',resetLegs);
     rb.appendChild(leg);
   }
   const stop=document.createElement('div'); stop.className='rb-row rb-stop'; stop.id='row-'+i;
-  stop.innerHTML=`<div class="rail"><div class="badge">${i+1}</div></div>
-    <div class="s-body"><div><div class="s-name">${s.name}</div><div class="s-en">${s.en||''}</div></div>
-    <div class="s-time">${s.time||''}</div></div>`;
+  stop.innerHTML='<div class="rail"><div class="badge">'+(i+1)+'</div></div>'
+    +'<div class="s-body"><div><div class="s-name">'+s.name+'</div><div class="s-en">'+(s.en||'')+'</div></div>'
+    +'<div class="s-time">'+(s.time||'')+'</div></div>';
   stop.addEventListener('click',()=>{ map.flyTo(s.coords,11,{duration:1.1}); markers[i].openPopup(); });
   rb.appendChild(stop); lastRow=stop;
 });
@@ -425,57 +449,56 @@ function setActive(i,scroll){
 function highlightLeg(i){
   Object.keys(legLines).forEach(k=>{
     const on=(+k===i);
-    legLines[k].setStyle(on?{color:'#000',weight:5,opacity:1}:{color:'#9a9a9e',weight:2.4,opacity:.75});
-    if(legLabels[k]){const e=legLabels[k].getElement();if(e)e.classList.toggle('hot',on);}
+    legLines[k].setStyle(on?{color:DARK?'#fff':'#000',weight:5,opacity:1}:{color:DARK?'#8d8d92':'#9a9a9e',weight:2.4,opacity:.8});
+    const e=legLines[k].getElement(); if(e) e.style.filter = on?routeHalo():'none';
+    if(legLabels[k]){const el=legLabels[k].getElement();if(el)el.classList.toggle('hot',on);}
   });
 }
 function resetLegs(){
   Object.keys(legLines).forEach(k=>{
-    legLines[k].setStyle({color:'#1b1b1f',weight:3.4,opacity:.92});
-    if(legLabels[k]){const e=legLabels[k].getElement();if(e)e.classList.remove('hot');}
+    legLines[k].setStyle({color:routeCore(),weight:3.4,opacity:.95});
+    const e=legLines[k].getElement(); if(e) e.style.filter=routeHalo();
+    if(legLabels[k]){const el=legLabels[k].getElement();if(el)el.classList.remove('hot');}
   });
 }
 
-// 视野:框住所有点
+// 视野
 const allPts=[]; STOPS.forEach(s=>{allPts.push(s.coords); if(s.via)s.via.forEach(v=>allPts.push(v.coords));});
 map.fitBounds(L.latLngBounds(allPts),{padding:[55,55]});
 
-// ---- 实时路由:逐段取真实公路几何 ----
-async function fetchLeg(pts){ // pts: [[lat,lng],...]
+// 实时路由
+async function fetchLeg(pts){
   const cs=pts.map(c=>c[1]+','+c[0]).join(';');
-  const url=`https://router.project-osrm.org/route/v1/driving/${cs}?overview=full&geometries=geojson`;
+  const url='https://router.project-osrm.org/route/v1/driving/'+cs+'?overview=full&geometries=geojson';
   const r=await fetch(url); if(!r.ok) throw 0;
   const j=await r.json(); if(j.code!=='Ok'||!j.routes[0]) throw 0;
   return j.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
 }
-
 async function buildRoute(){
   const tasks=[];
   for(let i=1;i<STOPS.length;i++){
     const prev=STOPS[i-1], cur=STOPS[i];
     const wp=[prev.coords]; if(cur.via)cur.via.forEach(v=>wp.push(v.coords)); wp.push(cur.coords);
-    tasks.push(fetchLeg(wp).catch(()=>wp)); // 失败则退化为直线连点
+    tasks.push(fetchLeg(wp).catch(()=>wp));
   }
   const geoms=await Promise.all(tasks);
   geoms.forEach((g,idx)=>{
     const i=idx+1;
-    const line=L.polyline(g,{color:'#1b1b1f',weight:3.4,opacity:.92,lineJoin:'round',lineCap:'round'}).addTo(map);
-    const el=line.getElement(); if(el) el.classList.add('route');
+    const line=L.polyline(g,{color:routeCore(),weight:3.4,opacity:.95,lineJoin:'round',lineCap:'round'}).addTo(map);
+    const el=line.getElement(); if(el) el.style.filter=routeHalo();
     legLines[i]=line;
     if(STOPS[i].drive.min>=20){
-      const lab=L.marker(g[Math.floor(g.length/2)],{ icon:L.divIcon({className:'leg-label',html:`<span class="lab">${fmtShort(STOPS[i].drive.min)}</span>`,iconSize:[1,1]}), interactive:false, keyboard:false }).addTo(map);
+      const lab=L.marker(g[Math.floor(g.length/2)],{ icon:L.divIcon({className:'leg-label',html:'<span class="lab">'+fmtShort(STOPS[i].drive.min)+'</span>',iconSize:[1,1]}), interactive:false, keyboard:false }).addTo(map);
       legLabels[i]=lab;
     }
   });
-  return geoms;
 }
-
 function drawLine(line,dur){
-  const p=line.getElement(); if(!p){return;}
+  const p=line.getElement(); if(!p) return;
   const len=p.getTotalLength();
   p.style.transition='none'; p.style.strokeDasharray=len; p.style.strokeDashoffset=len;
   p.getBoundingClientRect();
-  p.style.transition=`stroke-dashoffset ${dur}ms cubic-bezier(.4,0,.2,1)`;
+  p.style.transition='stroke-dashoffset '+dur+'ms cubic-bezier(.4,0,.2,1)';
   p.style.strokeDashoffset='0';
   setTimeout(()=>{p.style.strokeDasharray='';p.style.strokeDashoffset='';},dur+80);
 }
